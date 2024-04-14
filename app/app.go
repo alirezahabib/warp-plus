@@ -17,6 +17,7 @@ const doubleMTU = 1280 // minimum mtu for IPv6, may cause frag reassembly somewh
 
 type WarpOptions struct {
 	Bind     netip.AddrPort
+	GoolBind netip.AddrPort
 	Endpoint string
 	License  string
 	Psiphon  *PsiphonOptions
@@ -69,7 +70,7 @@ func RunWarp(ctx context.Context, l *slog.Logger, opts WarpOptions) error {
 	case opts.Gool:
 		l.Info("running in warp-in-warp (gool) mode")
 		// run warp in warp
-		warpErr = runWarpInWarp(ctx, l, opts.Bind, endpoints)
+		warpErr = runWarpInWarp(ctx, l, opts.Bind, opts.GoolBind, endpoints)
 	default:
 		l.Info("running in normal warp mode")
 		// just run primary warp on bindAddress
@@ -141,7 +142,7 @@ func runWarpWithPsiphon(ctx context.Context, l *slog.Logger, bind netip.AddrPort
 	return nil
 }
 
-func runWarpInWarp(ctx context.Context, l *slog.Logger, bind netip.AddrPort, endpoints []string) error {
+func runWarpInWarp(ctx context.Context, l *slog.Logger, bind netip.AddrPort, goolBind netip.AddrPort, endpoints []string) error {
 	// Run outer warp
 	conf, err := wiresocks.ParseConfig("./stuff/primary/wgcf-profile.ini", endpoints[0])
 	if err != nil {
@@ -155,13 +156,22 @@ func runWarpInWarp(ctx context.Context, l *slog.Logger, bind netip.AddrPort, end
 		conf.Peers[i] = peer
 	}
 
-	tnet, err := wiresocks.StartWireguard(ctx, l.With("gool", "outer"), conf)
+	tnet_outer, err := wiresocks.StartWireguard(ctx, l.With("gool", "outer"), conf)
 	if err != nil {
 		return err
 	}
 
+	if goolBind.Port() != 0 {
+		_, err = tnet_outer.StartProxy(goolBind)
+		if err != nil {
+			return err
+		}
+
+		l.Info("serving outer proxy", "address", goolBind)
+	}
+
 	// Create a UDP port forward between localhost and the remote endpoint
-	addr, err := wiresocks.NewVtunUDPForwarder(ctx, netip.MustParseAddrPort("127.0.0.1:0"), endpoints[1], tnet, singleMTU)
+	addr, err := wiresocks.NewVtunUDPForwarder(ctx, netip.MustParseAddrPort("127.0.0.1:0"), endpoints[1], tnet_outer, singleMTU)
 	if err != nil {
 		return err
 	}
@@ -178,17 +188,17 @@ func runWarpInWarp(ctx context.Context, l *slog.Logger, bind netip.AddrPort, end
 		conf.Peers[i] = peer
 	}
 
-	tnet, err = wiresocks.StartWireguard(ctx, l.With("gool", "inner"), conf)
+	tnet_inner, err := wiresocks.StartWireguard(ctx, l.With("gool", "inner"), conf)
 	if err != nil {
 		return err
 	}
 
-	_, err = tnet.StartProxy(bind)
+	_, err = tnet_inner.StartProxy(bind)
 	if err != nil {
 		return err
 	}
 
-	l.Info("serving proxy", "address", bind)
+	l.Info("serving inner proxy", "address", bind)
 	return nil
 }
 

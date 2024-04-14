@@ -62,6 +62,7 @@ func main() {
 		v6       = fs.BoolShort('6', "only use IPv6 for random warp endpoint")
 		verbose  = fs.Bool('v', "verbose", "enable verbose logging")
 		bind     = fs.String('b', "bind", "127.0.0.1:8086", "socks bind address")
+		goolBind = fs.StringLong("goolbind", "", "outer tunnel socks bind address in gool mode")
 		endpoint = fs.String('e', "endpoint", "", "warp endpoint")
 		key      = fs.String('k', "key", "", "warp key")
 		gool     = fs.BoolLong("gool", "enable gool mode (warp in warp)")
@@ -110,8 +111,17 @@ func main() {
 		fatal(l, fmt.Errorf("invalid bind address: %w", err))
 	}
 
+	var goolBindAddrPort netip.AddrPort
+	if *gool && *goolBind != "" {
+		goolBindAddrPort, err = netip.ParseAddrPort(*goolBind)
+		if err != nil {
+			fatal(l, fmt.Errorf("invalid gool bind address: %w", err))
+		}
+	}
+
 	opts := app.WarpOptions{
 		Bind:     bindAddrPort,
+		GoolBind: goolBindAddrPort,
 		Endpoint: *endpoint,
 		License:  *key,
 		Gool:     *gool,
