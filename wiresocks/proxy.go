@@ -48,7 +48,7 @@ func (vt *VirtualTun) StartProxy(bindAddress netip.AddrPort) (netip.AddrPort, er
 }
 
 func (vt *VirtualTun) generalHandler(req *statute.ProxyRequest) error {
-	vt.Logger.Info("handling connection", "protocol", req.Network, "destination", req.Destination)
+	vt.Logger.Debug("handling connection", "protocol", req.Network, "destination", req.Destination)
 	conn, err := vt.Tnet.Dial(req.Network, req.Destination)
 	if err != nil {
 		return err
