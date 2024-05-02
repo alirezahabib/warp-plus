@@ -6,6 +6,8 @@ replace github.com/Psiphon-Labs/psiphon-tunnel-core => github.com/bepass-org/psi
 
 require (
 	github.com/Psiphon-Labs/psiphon-tunnel-core v2.0.28+incompatible
+	github.com/adrg/xdg v0.4.0
+	github.com/carlmjohnson/versioninfo v0.22.5
 	github.com/fatih/color v1.16.0
 	github.com/flynn/noise v1.1.0
 	github.com/frankban/quicktest v1.14.6
@@ -16,6 +18,7 @@ require (
 	github.com/quic-go/quic-go v0.40.1
 	github.com/refraction-networking/utls v1.3.3
 	github.com/rodaine/table v1.1.1
+	github.com/things-go/go-socks5 v0.0.5
 	golang.org/x/crypto v0.21.0
 	golang.org/x/net v0.22.0
 	golang.org/x/sys v0.18.0
