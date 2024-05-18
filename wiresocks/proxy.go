@@ -81,7 +81,7 @@ func (vt *VirtualTun) generalHandler(req *statute.ProxyRequest) error {
 	// Wait for one of the copy operations to finish
 	err = <-done
 	if err != nil {
-		vt.Logger.Warn(err.Error())
+		vt.Logger.Debug(err.Error())
 	}
 
 	// Close connections and wait for the other copy operation to finish
