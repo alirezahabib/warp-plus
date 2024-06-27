@@ -20,6 +20,7 @@ const doubleMTU = 1280 // minimum mtu for IPv6, may cause frag reassembly somewh
 
 type WarpOptions struct {
 	Bind            netip.AddrPort
+	GoolBind        netip.AddrPort
 	Endpoint        string
 	License         string
 	DnsAddr         netip.Addr
@@ -291,6 +292,13 @@ func runWarpInWarp(ctx context.Context, l *slog.Logger, opts WarpOptions, endpoi
 		return err
 	}
 
+	_, err = wiresocks.StartProxy(ctx, l, tnet, opts.GoolBind)
+	if err != nil {
+		return err
+	}
+
+	l.Info("serving outer proxy", "address", opts.GoolBind)
+
 	// // Test wireguard connectivity
 	// if err := usermodeTunTest(ctx, l, tnet); err != nil {
 	// 	return err
@@ -369,7 +377,7 @@ func runWarpInWarp(ctx context.Context, l *slog.Logger, opts WarpOptions, endpoi
 		return err
 	}
 
-	l.Info("serving proxy", "address", opts.Bind)
+	l.Info("serving inner proxy", "address", opts.Bind)
 	return nil
 }
 
