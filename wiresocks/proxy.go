@@ -60,7 +60,7 @@ func StartProxy(ctx context.Context, l *slog.Logger, tnet *netstack.Net, bindAdd
 }
 
 func (vt *VirtualTun) generalHandler(req *statute.ProxyRequest) error {
-	vt.Logger.Info("handling connection", "protocol", req.Network, "destination", req.Destination)
+	vt.Logger.Debug("handling connection", "protocol", req.Network, "destination", req.Destination)
 	conn, err := vt.Tnet.Dial(req.Network, req.Destination)
 	if err != nil {
 		return err
@@ -89,7 +89,7 @@ func (vt *VirtualTun) generalHandler(req *statute.ProxyRequest) error {
 	// Wait for one of the copy operations to finish
 	err = <-done
 	if err != nil {
-		vt.Logger.Warn(err.Error())
+		vt.Logger.Debug(err.Error())
 	}
 
 	// Close connections and wait for the other copy operation to finish
